@@ -1,4 +1,5 @@
 #include "MMapSharing.hpp"
+#include <sys/mman.h>
 
 using namespace pistis::memory;
 

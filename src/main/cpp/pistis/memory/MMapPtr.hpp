@@ -13,14 +13,15 @@
 #include <pistis/memory/MMapSharing.hpp>
 #include <atomic>
 #include <string>
+#include <stdint.h>
 #include <unistd.h>
 
 namespace pistis {
   namespace memory {
     namespace detail {
-      void* mapMemoryFromFile(pistis::filesystem::File& file, size_t length,
-			      MMapPermissions permissions, MMapOptions options,
-			      MMapSharing sharing);
+      void* mapMemoryFromFile(pistis::filesystem::File& file, size_t offset,
+			      size_t length, MMapPermissions permissions,
+			      MMapOptions options, MMapSharing sharing);
       void unmapMemory(void* addr, size_t length) noexcept;
     }
 
@@ -43,7 +44,7 @@ namespace pistis {
       }
       MMapPtr(const MMapPtr& other): p_(addRef_(other.p_)) { }
       MMapPtr(MMapPtr&& other): p_(other.p_) { other.p_ = nullptr; }
-      ~MMapPtr() { removeRef_(); }
+      ~MMapPtr() { removeRef_(p_); }
 
       Data* get() const { return p_->data; }
       Data* end() const { return p_->data + p_->length; }
@@ -53,7 +54,7 @@ namespace pistis {
       
       MMapPtr& operator=(const MMapPtr& other) {
 	if (p_ != other.p_) {
-	  removeRef_();
+	  removeRef_(p_);
 	  p_ = addRef_(other.p_);
 	}
 	return *this;
@@ -61,7 +62,7 @@ namespace pistis {
 
       MMapPtr& operator=(MMapPtr&& other) {
 	if (p_ != other.p_) {
-	  removeRef_();
+	  removeRef_(p_);
 	  p_ = other.p_;
 	  other.p_ = nullptr;
 	}
@@ -76,9 +77,9 @@ namespace pistis {
 	  MMapPermissions access = MMapPermissions::READ_WRITE,
 	  MMapOptions options = MMapOptions::NONE,
 	  MMapSharing sharing = MMapSharing::SHARED) {
-	void *mapped = detail::MapMemoryFromFile(file, offset, length,
+	void *mapped = detail::mapMemoryFromFile(file, offset, length,
 						 access, options, sharing);
-	return MMapPtr(mapped, length, std::move(file));
+	return MMapPtr((Data*)mapped, length, std::move(file));
       }
 			    
       static MMapPtr ofFile(
@@ -117,13 +118,13 @@ namespace pistis {
 	Data *data;
 	size_t length;
 	pistis::filesystem::File file;
-	std::atomic_uint32_t refCnt;
+	std::atomic<uint32_t> refCnt;
 
 	MMappedData(Data* d, size_t l, pistis::filesystem::File&& f):
 	    data(d), length(l), file(std::move(f)), refCnt(1) {
 	}
 
-	~MMapppedData() {
+	~MMappedData() {
 	  detail::unmapMemory((void*)data, length);
 	}	
       };

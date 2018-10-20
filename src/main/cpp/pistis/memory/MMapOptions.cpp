@@ -1,29 +1,29 @@
 #include "MMapOptions.hpp"
 #include <sstream>
 #include <tuple>
-#include <mman.h>
+#include <sys/mman.h>
 
 using namespace pistis::memory;
 
 namespace {
-  static inline int addOption(std::ostringstream& out, const std::string& opt,
-			      int cnt) {
-    if (cnt) {
-      out << "|";
-    }
-    out << opt;
-    return cnt + 1;
-  }
+  const std::tuple<int, std::string> OPTION_TO_NAME_MAP[]{
+    std::tuple<int, std::string>{ MAP_NORESERVE, "DONT_RESERVE_SWAP" },
+    std::tuple<int, std::string>{ MAP_LOCKED, "LOCKED" },
+    std::tuple<int, std::string>{ MAP_POPULATE, "POPULATE" },
+  };
+
+  const size_t OPTION_TO_NAME_MAP_SIZE =
+      sizeof(OPTION_TO_NAME_MAP)/sizeof(std::tuple<int, std::string>);
+
+  const std::tuple<int, std::string>* const OPTION_TO_NAME_MAP_END =
+      OPTION_TO_NAME_MAP + OPTION_TO_NAME_MAP_SIZE;
+
 }
 
 const MMapOptions MMapOptions::NONE(0);
 const MMapOptions MMapOptions::DONT_RESERVE_SWAP(MAP_NORESERVE);
 const MMapOptions MMapOptions::LOCKED(MAP_LOCKED);
 const MMapOptions MMapOptions::POPULATE(MAP_POPULATE);
-const MMapOptions MMapOptions::POPULATE_NO_READAHEAD(MAP_POPULATE|MAP_NONBLOCK);
-const MMapOptions MMapOptions::USE_HUGE_PAGES(MAP_HUGETLB);
-const MMapOptions MMapOptions::USE_2MB_PAGES(MAP_HUGETLB|MAP_HUGE_2MB);
-const MMapOptions MMapOptions::USE_1GB_PAGES(MAP_HUGETLB|MAP_HUGE_1GB);
 
 std::string MMapOptions::name() const {
   if (!flags()) {
@@ -31,24 +31,15 @@ std::string MMapOptions::name() const {
   } else {
     std::ostringstream out;
     int cnt = 0;
-    if (flags() & MAP_NORESERVE) {
-      cnt = addOption(out, "DONT_RESERVE_SWAP", cnt);
-    }
-    if (flags() & MAP_LOCKED) {
-      cnt = addOption(out, "LOCKED", cnt);
-    }
-    if (flags() & MAP_POPULATE) {
-      const char* opt = flags() & MAP_NONBLOCK ? "POPULATE_NO_READAHEAD"
-			                       : "POPULATE";
-      cnt = addOption(out, opt, cnt);
-    }
-    if (flags & MAP_HUGETLB) {
-      if (flags() & MAP_HUGE_1GB) {
-	cnt = addOption(out, "USE_1GB_PAGES", cnt);
-      } else if (flags() & MAP_HUGE_2MB) {
-	cnt = addOption(out, "USE_2MB_PAGES", cnt);
-      } else {
-	cnt = addOption(out, "USE_HUGE_PAGES", cnt);
+    for (const std::tuple<int, std::string>* p = OPTION_TO_NAME_MAP;
+	 p != OPTION_TO_NAME_MAP_END;
+	 ++p) {
+      if (flags() & std::get<0>(*p)) {
+	if (cnt > 0) {
+	  out << "|";
+	}
+	out << std::get<1>(*p);
+	++cnt;
       }
     }
 		                                  
@@ -57,8 +48,6 @@ std::string MMapOptions::name() const {
 }
 
 MMapOptions MMapOptions::operator~() const {
-  static const int ALL_BITS = MMAP_NORESERVE | MMAP_LOCKED | MMAP_POPULATE |
-                              MMAP_NONBLOCK | MMAP_HUGETLB | MMAP_HUGE_2MB |
-                              MMAP_HUGE_1GB;
+  static const int ALL_BITS = MAP_NORESERVE | MAP_LOCKED | MAP_POPULATE;
   return MMapOptions(~flags() & ALL_BITS);
 }

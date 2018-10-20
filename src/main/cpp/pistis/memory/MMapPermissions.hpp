@@ -1,6 +1,7 @@
 #ifndef __PISTIS__MEMORY__MMAPPERMISSIONS_HPP__
 #define __PISTIS__MEMORY__MMAPPERMISSIONS_HPP__
 
+#include <pistis/filesystem/FileAccessMode.hpp>
 #include <ostream>
 #include <string>
 
@@ -21,6 +22,7 @@ namespace pistis {
       MMapPermissions();
       int flags() const { return flags_; }
       std::string name() const;
+      pistis::filesystem::FileAccessMode fileAccess() const;
 
       bool operator==(MMapPermissions other) const {
 	return flags() == other.flags();
@@ -39,7 +41,7 @@ namespace pistis {
       MMapPermissions operator&(MMapPermissions other) const {
 	return MMapPermissions(flags() & other.flags());
       }
-      MMapPermissions& operator&=(MMapPermissions other) const {
+      MMapPermissions& operator&=(MMapPermissions other) {
 	flags_ &= other.flags();
       }
       MMapPermissions operator~() const;
@@ -50,7 +52,8 @@ namespace pistis {
       MMapPermissions(int f): flags_(f) { }
     };
     
-    std::ostream& operator<<(std::ostream& out, MMapPermissions permissions) {
+    inline std::ostream& operator<<(std::ostream& out,
+				    MMapPermissions permissions) {
       return out << permissions.name();
     }
   }

@@ -37,34 +37,6 @@ namespace pistis {
        */
       static const MMapOptions POPULATE;
 
-      /** @brief Only prepopulate pages already in RAM
-       *
-       *  Specifying this option passes both MAP_POPULATE and MAP_NONBLOCK
-       *  to the mmap() call.  See the mmap() man page for the exact effect
-       *  of this option.
-       */
-      static const MMapOptions POPULATE_NO_READAHEAD;
-
-      /** @brief Use huge pages to map the file
-       *
-       *  Specifying this option passes MAP_HUGETLB to the mmap() call.
-       */
-      static const MMapOptions USE_HUGE_PAGES;
-
-      /** @brief Use 2 MB "huge" pages to map the file.
-       *
-       *  Specifying this option passes MAP_HUGETLB and MAP_HUGE_2MB to
-       *  the mmap() call.
-       */
-      static const MMapOptions USE_2MB_PAGES;
-
-      /** @brief Use 1 GB "huge" pages to map the file.
-       *
-       *  Specifying this option passes MAP_HUGETLB and MAP_HUGE_1GB to
-       *  the mmap() call.
-       */
-      static const MMapOptions USE_1GB_PAGES;
-
     public:
       MMapOptions(): flags_(0) { }
       int flags() const { return flags_; }

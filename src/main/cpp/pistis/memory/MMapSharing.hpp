@@ -13,7 +13,7 @@ namespace pistis {
       static const MMapSharing SHARED;
 
     public:
-      MMapSharing(): ordinal_(0);
+      MMapSharing(): ordinal_(0) { }
       int flags() const;
       const std::string& name() const;
 
@@ -30,7 +30,7 @@ namespace pistis {
       MMapSharing(int o): ordinal_(o) { }
     };
 
-    std::ostream& operator<<(std::ostream& out, MMapSharing sharing) {
+    inline std::ostream& operator<<(std::ostream& out, MMapSharing sharing) {
       return out << sharing.name();
     }
     

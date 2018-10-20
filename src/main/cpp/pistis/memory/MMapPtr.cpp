@@ -1,7 +1,11 @@
 #include "MMapPtr.hpp"
 #include <pistis/exceptions/IOError.hpp>
 #include <sstream>
+
+#include <string.h>
 #include <sys/mman.h>
+
+#include <iostream>
 
 using namespace pistis::exceptions;
 using namespace pistis::memory;
@@ -25,8 +29,9 @@ void* pistis::memory::detail::mapMemoryFromFile(
     pistis::filesystem::File& file, size_t offset, size_t length,
     MMapPermissions permissions, MMapOptions options, MMapSharing sharing
 ) {
-  void *p = ::mmap(nullptr, length, permissions.flags(),
-		   sharing.flags() | options.flags(), file.fd(), offset);
+  int flags = sharing.flags() | options.flags();
+  void *p = ::mmap(nullptr, length, permissions.flags(), flags, file.fd(),
+		   offset);
   if (p == MAP_FAILED) {
     throw IOError::fromSystemError(createErrorMessage("map memory",
 						      file.name()),
@@ -35,7 +40,11 @@ void* pistis::memory::detail::mapMemoryFromFile(
   return p;
 }
 
-void pistis::memory::detil::unmapMemory(void* addr, size_t length) noexcept {
+void pistis::memory::detail::unmapMemory(void* addr, size_t length) noexcept {
   // TODO: If this fails, log the failure somewhere...
-  ::munmap(addr, length);
+  if (::munmap(addr, length) < 0) {
+    std::cerr << "WARNING: Failed to unmap " << length
+	      << " bytes of memory at address " << addr << ": "
+              << strerror(errno);
+  }
 }

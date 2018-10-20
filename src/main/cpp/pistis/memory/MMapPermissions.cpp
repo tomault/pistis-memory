@@ -1,8 +1,9 @@
 #include "MMapPermissions.hpp"
 #include <sstream>
 
-#include <mman.h>
+#include <sys/mman.h>
 
+using namespace pistis::filesystem;
 using namespace pistis::memory;
 
 namespace {
@@ -23,7 +24,7 @@ const MMapPermissions MMapPermissions::READ_WRITE(PROT_READ|PROT_WRITE);
 const MMapPermissions MMapPermissions::READ_EXECUTE(PROT_READ|PROT_EXEC);
 const MMapPermissions MMapPermissions::ALL(PROT_READ|PROT_WRITE|PROT_EXEC);
 
-MMapPermissions::MMapPermissions(PROT_NONE);
+MMapPermissions::MMapPermissions(): flags_(PROT_NONE) { }
 
 std::string MMapPermissions::name() const {
   std::ostringstream out;
@@ -44,7 +45,12 @@ std::string MMapPermissions::name() const {
   return out.str();
 }
 
+FileAccessMode MMapPermissions::fileAccess() const {
+  return (flags() & PROT_WRITE) ? FileAccessMode::READ_WRITE
+                                : FileAccessMode::READ_ONLY;
+}
+
 MMapPermissions MMapPermissions::operator~() const {
-  static const ALL_BITS = PROT_READ|PROT_WRITE|PROT_EXEC|PROT_NONE;
+  static const int ALL_BITS = PROT_READ|PROT_WRITE|PROT_EXEC|PROT_NONE;
   return MMapPermissions(~flags() & ALL_BITS);
 }
