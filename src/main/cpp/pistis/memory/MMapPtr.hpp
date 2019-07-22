@@ -1,7 +1,7 @@
 #ifndef __PISTIS__MEMORY__MMAPPTR_HPP__
 #define __PISTIS__MEMORY__MMAPPTR_HPP__
 
-/** @file MMapPtr.hpp 
+/** @file MMapPtr.hpp
  *
  *  Declaration and implementation of smart pointers to memory-mapped
  *  regions.
