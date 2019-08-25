@@ -4,6 +4,7 @@
 #include <pistis/exceptions/OutOfRangeError.hpp>
 #include <tuple>
 #include <stddef.h>
+#include <string.h>
 
 namespace pistis {
   namespace memory {
